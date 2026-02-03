@@ -128,35 +128,99 @@ if (rsvpModal) {
   });
 }
 
-// Tangani submit form RSVP (Kirim ke Email via Formspree)
+// ===============================
+// TANGANI SUBMIT FORM RSVP (WhatsApp)
+// ===============================
+
 if (rsvpForm) {
-  rsvpForm.addEventListener("submit", async (e) => {
+  rsvpForm.addEventListener("submit", (e) => {
     e.preventDefault();
 
     const nameInput = document.getElementById("guest-name");
-    const thankYouMessage = document.getElementById("thank-you-message");
+    const attendanceSelect = document.getElementById("attendance");
+    const messageInput = document.getElementById("message");
+
+    if (!nameInput || !attendanceSelect || !thankYouMessage) return;
+
+    const name = nameInput.value.trim();
+    const attendance = attendanceSelect.value;
+    const guestMessage = messageInput.value.trim() || "-";
+
+    // --- CONFIG WHATSAPP ---
+    // Ganti nomor di bawah dengan nomor WA kamu (format 62...)
+    const noWA = "6281234567890"; 
+    const teksWA = `Halo, saya *${name}* ingin konfirmasi RSVP undangan pernikahan Rani & Ardi.%0A%0A` +
+                   `Status: *${attendance === 'hadir' ? 'InsyaAllah Hadir' : 'Belum Dapat Hadir'}*%0A` +
+                   `Pesan: ${guestMessage}`;
     
-    // Ambil data form
-    const formData = new FormData(rsvpForm);
-    thankYouMessage.textContent = "Sedang mengirim konfirmasi...";
+    // 1. Tampilkan pesan sukses di web
+    rsvpForm.style.display = "none";
+    thankYouMessage.textContent = `Terima kasih, ${name}. Konfirmasi Anda sedang diteruskan ke WhatsApp...`;
     thankYouMessage.style.display = "block";
 
-    try {
-      const response = await fetch(rsvpForm.action, {
-        method: 'POST',
-        body: formData,
-        headers: { 'Accept': 'application/json' }
-      });
+    // 2. Tampilkan efek confetti
+    launchConfetti();
 
-      if (response.ok) {
-        rsvpForm.style.display = "none";
-        thankYouMessage.textContent = `Terima kasih, ${nameInput.value}! Konfirmasi Anda telah kami terima via email.`;
-        launchConfetti();
-      } else {
-        thankYouMessage.textContent = "Oops! Terjadi kesalahan, coba lagi ya.";
-      }
-    } catch (error) {
-      thankYouMessage.textContent = "Gagal terhubung ke server.";
-    }
+    // 3. Buka WhatsApp setelah delay kecil agar user sempat melihat pesan sukses
+    setTimeout(() => {
+      window.open(`https://wa.me/${noWA}?text=${teksWA}`, '_blank');
+    }, 1500);
   });
+}
+
+// ===============================
+// CONFETTI EFFECT
+// ===============================
+
+function launchConfetti() {
+  const confettiContainer = document.getElementById("confetti-container");
+  if (!confettiContainer) return;
+
+  const colors = ["#ffdde1", "#fec5e5", "#ffb3c6", "#ffc8dd", "#f9a8d4"];
+  const confettiCount = 150;
+
+  for (let i = 0; i < confettiCount; i++) {
+    const piece = document.createElement("div");
+    piece.classList.add("confetti-piece");
+    piece.style.left = Math.random() * 100 + "vw";
+    const color = colors[Math.floor(Math.random() * colors.length)];
+    piece.style.backgroundColor = color;
+    const delay = Math.random() * 0.8;
+    piece.style.animationDelay = delay + "s";
+    const duration = 2.2 + Math.random() * 1.1;
+    piece.style.animationDuration = duration + "s";
+    confettiContainer.appendChild(piece);
+
+    setTimeout(() => { piece.remove(); }, (duration + delay) * 1000);
+  }
+}
+
+// ===============================
+// FLOATING HEARTS / BUNGA
+// ===============================
+
+const floatingContainer = document.getElementById("floating-elements-container");
+const floatingChars = ["❤", "♡", "❀", "❁", "❣"];
+
+function createFloatingElement() {
+  if (!floatingContainer) return;
+
+  const span = document.createElement("span");
+  span.classList.add("floating-item");
+  span.textContent = floatingChars[Math.floor(Math.random() * floatingChars.length)];
+  span.style.left = Math.random() * 100 + "vw";
+  const duration = 6 + Math.random() * 4;
+  span.style.animationDuration = duration + "s";
+  const size = 0.9 + Math.random() * 0.8;
+  span.style.fontSize = size + "rem";
+
+  floatingContainer.appendChild(span);
+  setTimeout(() => { span.remove(); }, duration * 1000);
+}
+
+setInterval(createFloatingElement, 900);
+
+// Jalankan elemen awal
+for (let i = 0; i < 8; i++) {
+  setTimeout(createFloatingElement, i * 300);
 }
